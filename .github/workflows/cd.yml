@@ -12,13 +12,15 @@ on:
       - 'v*'
 
 jobs:
-  deploy:
+  prepare-release:
+    name: Prepare Release Metadata
     if: |
       (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) ||
-      (github.event_name == 'workflow_run' && startsWith(github.event.workflow_run.head_branch, 'v'))
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.get-version.outputs.version }}
+      changelog: ${{ steps.extract-changelog.outputs.changelog }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -35,54 +37,57 @@ jobs:
         id: extract-changelog
         run: |
           VERSION="${{ steps.get-version.outputs.version }}"
-          # Extract changelog between the current version header and the next header or EOF
           CHANGELOG=$(awk -v ver="## $VERSION" '
           BEGIN { found=0; }
           $0 ~ "^" ver { found=1; next; }
           found && $0 ~ /^## / { exit; }
           found { print; }
           ' CHANGELOG.md)
-          # Properly format the changelog for GitHub Actions output
-          CHANGELOG="${CHANGELOG//'%'/'%25'}"
-          CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
-          CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
-          echo "changelog=$CHANGELOG" >> $GITHUB_OUTPUT
 
-  build-windows:
-    needs: deploy
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "changelog<<$EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "$EOF" >> $GITHUB_OUTPUT
+
+  build-and-release:
+    name: Build & Release (Windows)
+    needs: prepare-release
     runs-on: windows-latest
-    if: github.event.workflow_run.conclusion == 'success'
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: stable
-          target: x86_64-pc-windows-gnu
-          override: true
-          cache: true
-          components: rustfmt,clippy
-
-      - name: Install MinGW-w64
+      - name: Install C dependencies (Windows)
         run: |
-          choco install mingw -y
-          echo "C:\ProgramData\chocolatey\bin" | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
+          vcpkg install glib:x64-windows pkgconf:x64-windows
+          echo "PKG_CONFIG_PATH=C:/vcpkg/installed/x64-windows/lib/pkgconfig" >> $GITHUB_ENV
 
-      - name: Build binary
-        run: cargo build --release --target x86_64-pc-windows-gnu
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build release binary
+        run: cargo build --release
 
       - name: Package binary
+        shell: powershell
         run: |
           $BIN_NAME = "popcorn"
-          $FILE_NAME = "$BIN_NAME-x86_64-pc-windows-gnu"
-          mkdir dist
-          Compress-Archive -Path "target\x86_64-pc-windows-gnu\release\$BIN_NAME.exe" -DestinationPath "dist\$FILE_NAME.zip"
+          $VERSION = "${{ needs.prepare-release.outputs.version }}"
+          $ZIP_NAME = "$BIN_NAME-v$VERSION-x86_64-pc-windows-msvc.zip"
 
-      - name: Upload binaries to GitHub Release
+          New-Item -ItemType Directory -Force -Path dist
+          Compress-Archive -Path "target\release\$BIN_NAME.exe" -DestinationPath "dist\$ZIP_NAME"
+
+      - name: Upload binary to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: dist/*
-          tag_name: v${{ needs.deploy.outputs.version }}
+          tag_name: v${{ needs.prepare-release.outputs.version }}
+          name: Release v${{ needs.prepare-release.outputs.version }}
+          body: ${{ needs.prepare-release.outputs.changelog }}
+          draft: false
+          prerelease: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
