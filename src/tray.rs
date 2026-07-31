@@ -56,11 +56,10 @@ pub fn run_tray(state: Arc<AppState>) -> anyhow::Result<()> {
 				if let Err(e) = tray.set_icon(Some(icon)) {
 					eprintln!("[tray] failed to change icon: {e}");
 				}
-			} else if event.id == settings_id {
-				if let Err(e) = open::that(&state.config_path) {
+			} else if event.id == settings_id
+				&& let Err(e) = open::that(&state.config_path) {
 					eprintln!("[tray] failed to open config: {e}");
 				}
-			}
 		}
 	});
 }
