@@ -1,0 +1,20 @@
+[advisories]
+ignore = [
+  # --- Vulnerabilities: quick-xml (используется только при сборке xcb) ---
+  "RUSTSEC-2026-0194",
+  "RUSTSEC-2026-0195",
+
+  # --- Unmaintained / Unsound warnings ---
+  "RUSTSEC-2024-0413", # atk
+  "RUSTSEC-2024-0416", # atk-sys
+  "RUSTSEC-2024-0412", # gdk
+  "RUSTSEC-2024-0418", # gdk-sys
+  "RUSTSEC-2024-0411", # gdkwayland-sys
+  "RUSTSEC-2024-0414", # gdkx11-sys
+  "RUSTSEC-2024-0415", # gtk
+  "RUSTSEC-2024-0420", # gtk-sys
+  "RUSTSEC-2024-0419", # gtk3-macros
+  "RUSTSEC-2024-0436", # paste
+  "RUSTSEC-2024-0370", # proc-macro-error
+  "RUSTSEC-2024-0429", # glib
+]
