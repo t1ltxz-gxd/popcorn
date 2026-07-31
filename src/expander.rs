@@ -63,32 +63,32 @@ pub fn expand(backspaces: usize, text_to_type: &str) {
 	let _ = enigo.text(text_to_type);
 }
 
-/// Maps the key name from '{{.<name> ...}}' with type enigo::Key.
-/// Not the most complete list, but covers the main modifiers and service keys.
-fn key_from_name(name: &str) -> Option<Key> {
-	if name.chars().count() == 1 {
-		return name.chars().next().map(Key::Unicode);
-	}
-
-	Some(match name {
-		"shift" => Key::Shift,
-		"ctrl" | "control" => Key::Control,
-		"alt" => Key::Alt,
-		"win" | "meta" | "cmd" => Key::Meta,
-		"enter" | "return" => Key::Return,
-		"tab" => Key::Tab,
-		"esc" | "escape" => Key::Escape,
-		"space" => Key::Space,
-		"backspace" => Key::Backspace,
-		"delete" | "del" => Key::Delete,
-		"home" => Key::Home,
-		"end" => Key::End,
-		"pageup" => Key::PageUp,
-		"pagedown" => Key::PageDown,
-		"up" => Key::UpArrow,
-		"down" => Key::DownArrow,
-		"left" => Key::LeftArrow,
-		"right" => Key::RightArrow,
-		_ => return None,
-	})
-}
+// /// Maps the key name from '{{.<name> ...}}' with type enigo::Key.
+// /// Not the most complete list, but covers the main modifiers and service keys.
+// fn key_from_name(name: &str) -> Option<Key> {
+// 	if name.chars().count() == 1 {
+// 		return name.chars().next().map(Key::Unicode);
+// 	}
+//
+// 	Some(match name {
+// 		"shift" => Key::Shift,
+// 		"ctrl" | "control" => Key::Control,
+// 		"alt" => Key::Alt,
+// 		"win" | "meta" | "cmd" => Key::Meta,
+// 		"enter" | "return" => Key::Return,
+// 		"tab" => Key::Tab,
+// 		"esc" | "escape" => Key::Escape,
+// 		"space" => Key::Space,
+// 		"backspace" => Key::Backspace,
+// 		"delete" | "del" => Key::Delete,
+// 		"home" => Key::Home,
+// 		"end" => Key::End,
+// 		"pageup" => Key::PageUp,
+// 		"pagedown" => Key::PageDown,
+// 		"up" => Key::UpArrow,
+// 		"down" => Key::DownArrow,
+// 		"left" => Key::LeftArrow,
+// 		"right" => Key::RightArrow,
+// 		_ => return None,
+// 	})
+// }
