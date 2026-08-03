@@ -18,7 +18,7 @@ toml = "1.1.2"
 tray-icon = "0.24.1"
 anyhow = "1.0.103"
 dirs = "6.0.0"
-tao = "0.35.3"
+tao = "0.36.0"
 windows = { version = "0.62.2", features = [
   "Win32",
   "Win32_System",
